@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Día 1 · Empuje</title>
+<style>
+:root{--bg:#f6f6f3;--card:#fff;--tx:#1b1b1a;--mut:#6b6b66;--ac:#e8541e;--ok:#2e9e5b;--bd:#e3e3dd;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141413;--card:#201f1d;--tx:#f1f0ec;--mut:#9b9a93;--ac:#ff7a45;--ok:#4cc17d;--bd:#33312e}}
+:root[data-theme="dark"]{--bg:#141413;--card:#201f1d;--tx:#f1f0ec;--mut:#9b9a93;--ac:#ff7a45;--ok:#4cc17d;--bd:#33312e}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;padding:16px 14px 150px;max-width:640px;margin-inline:auto}
+h1{font-size:26px;margin:8px 0 2px}
+.sub{color:var(--mut);margin:0 0 18px;font-size:14px}
+h2{font-size:28px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ac);margin:32px 0 12px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:10px}
+.t{font-weight:700;font-size:17px}
+.meta{color:var(--mut);font-size:14px;margin:2px 0 8px}
+ul{margin:0 0 10px;padding-left:20px;font-size:15px}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+button{font:inherit;cursor:pointer;border:1px solid var(--bd);background:var(--bg);color:var(--tx);border-radius:10px;padding:11px 14px;min-height:44px}
+button.set.done{background:var(--ok);border-color:var(--ok);color:#fff}
+button.go{background:var(--ac);border-color:var(--ac);color:#fff;font-weight:700}
+.tabs{display:flex;gap:8px;margin:10px 0 8px}
+.tab{flex:1;font-weight:700}
+.tab.on{background:var(--ac);border-color:var(--ac);color:#fff}
+.peso{display:block;width:100%;margin-top:10px;font:inherit;font-size:16px;padding:11px 12px;min-height:44px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx)}
+.peso::placeholder{color:var(--mut)}
+#bar{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--bd);padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:14px;max-width:640px;margin-inline:auto}
+#lbl{flex:1;font-size:14px;color:var(--mut)}
+#clk{font-size:40px;font-weight:800;font-variant-numeric:tabular-nums;min-width:96px;text-align:center}
+#bar.run #clk{color:var(--ac)}
+#bar.fin #clk{color:var(--ok)}
+</style>
+</head>
+<body>
+<h1 id="ttl">Día 1 · Empuje</h1>
+<div class="tabs" id="tabs"></div>
+<p class="sub">Toca una serie para marcarla como hecha (de nuevo para desmarcarla). El descanso arranca con el botón ⏱.</p>
+<div id="app"></div>
+
+<div id="bar"><div id="lbl">Crono parado</div><div id="clk">0:00</div><button id="stop">Parar</button></div>
+
+<script>
+var DATA1=[
+{s:"Pecho",ex:[
+{n:"1. Press de pecho plano",opts:["1.1 Press sentado en máquina","1.2 Máquina Hammer tumbado","1.3 Máquina Gym80 de pie"],sets:4,reps:10,rest:80},
+{n:"2. Press inclinado con mancuernas",sets:3,reps:12,rest:80},
+{n:"3. Apertura en máquina contractor",sets:3,reps:12,rest:60}]},
+{s:"Hombro",ex:[
+{n:"1. Press de hombro",opts:["1.1 Máquina sentado","1.2 De pie con barra","1.3 De pie/sentado con mancuernas"],sets:3,reps:12,rest:80},
+{n:"2. Elevaciones laterales con mancuernas",sets:3,reps:12,rest:60},
+{n:"3. Elevaciones frontales",opts:["3.1 Con disco","3.2 Con mancuernas"],sets:3,reps:12,rest:60}]},
+{s:"Tríceps",ex:[
+{n:"1. Extensión en polea con cuerda",sets:3,reps:12,rest:80},
+{n:"2. Sentado en máquina",sets:2,reps:10,rest:60}]}
+];
+var DATA2=[
+{s:"Espalda",ex:[
+{n:"1. Jalón dorsal",opts:["1.1 Jalón dorsal en máquina","1.2 Jalón al pecho en polea","1.3 Jalón dorsal máquina Technogym"],sets:4,reps:10,rest:80},
+{n:"2. Remo",opts:["2.1 Máquina sentado","2.2 Polea con agarre “V” estrecho","2.3 Máquina unilateral"],sets:3,reps:12,rest:80},
+{n:"3. Jalón en polea agarre cerrado al pecho",sets:3,reps:12,rest:80},
+{n:"4. Espalda (posterior)",opts:["4.1 Máquina aperturas","4.2 Remo amplio en T máquina"],sets:3,reps:12,rest:60}]},
+{s:"Bíceps",ex:[
+{n:"1. Curl",opts:["1.1 Máquina sentado","1.2 Mancuernas"],sets:4,reps:10,rest:60},
+{n:"2. Martillo con mancuernas",sets:3,reps:12,rest:60}]}
+];
+var DATA3=[
+{s:"Pierna",ex:[
+{n:"1. Extensión de cuádriceps",sets:4,reps:10,rest:80},
+{n:"2. Femoral",opts:["2.1 Tumbado","2.2 Sentado"],sets:3,reps:12,rest:80},
+{n:"3. Abducción en máquina (abrir)",sets:4,reps:10,rest:80},
+{n:"4. Aducción en máquina (cerrar)",sets:4,reps:10,rest:80}]}
+];
+var DAYS=[{short:"Día 1",name:"Día 1 · Empuje",data:DATA1,plank:true,warm:{n:"Elíptica"}},{short:"Día 2",name:"Día 2 · Tirones",data:DATA2,plank:false,warm:{n:"Trote ligero en cinta"}},{short:"Día 3",name:"Día 3 · Pierna",data:DATA3,squats:true,fin:"Andar en cinta",warm:{n:"Bicicleta"}}];
+var ac=null,tick=null,bar=document.getElementById("bar"),clk=document.getElementById("clk"),lbl=document.getElementById("lbl");
+function beep(f,d,at,type,vol){try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();if(ac.state==="suspended")ac.resume();var t0=ac.currentTime+(at||0),o=ac.createOscillator(),g=ac.createGain();o.type=type||"sine";o.frequency.value=f;o.connect(g);g.connect(ac.destination);g.gain.setValueAtTime(vol||.3,t0);g.gain.exponentialRampToValueAtTime(.001,t0+d);o.start(t0);o.stop(t0+d)}catch(e){}}
+function alarm(){for(var i=0;i<6;i++)beep(i%2?1175:880,.2,i*.25,"square",.6)}
+function fmt(s){return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")}
+function stop(){clearInterval(tick);tick=null;bar.className="";clk.textContent="0:00";lbl.textContent="Crono parado"}
+function run(phases,i){
+ if(i>=phases.length){bar.className="fin";clk.textContent="¡Listo!";lbl.textContent="Terminado";return}
+ var p=phases[i],left=p.sec;
+ bar.className="run";lbl.textContent=p.label;clk.textContent=fmt(left);
+ clearInterval(tick);
+ tick=setInterval(function(){
+  left--;clk.textContent=fmt(left);
+  if(left>0&&left<=3)beep(660,.12);
+  if(left<=0){clearInterval(tick);alarm();if(navigator.vibrate)navigator.vibrate([400,150,400,150,400]);run(phases,i+1)}
+ },1000);
+}
+function start(label,sec){beep(1,.01);run([{label:label,sec:sec}],0)}
+function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x)e.textContent=x;return e}
+var app=document.getElementById("app");
+function render(d){
+stop();app.innerHTML="";document.getElementById("ttl").textContent=d.name;
+if(d.warm){app.appendChild(el("h2","","Calentamiento"));var wc=el("div","card");wc.appendChild(el("div","t",d.warm.n));wc.appendChild(el("div","meta","5 minutos"));var wb=el("button","go","⏱ 5:00");wb.onclick=function(){start("Calentamiento · "+d.warm.n,300)};wc.appendChild(wb);app.appendChild(wc)}
+d.data.forEach(function(g){
+ app.appendChild(el("h2","",g.s));
+ g.ex.forEach(function(x){
+  var c=el("div","card");c.appendChild(el("div","t",x.n));
+  c.appendChild(el("div","meta",x.sets+" × "+x.reps+" · descanso "+x.rest+" s"));
+  if(x.opts){var u=el("ul");x.opts.forEach(function(o){u.appendChild(el("li","",o))});c.appendChild(u)}
+  var r=el("div","row");
+  for(var i=1;i<=x.sets;i++){(function(i){
+   var b=el("button","set","Serie "+i);
+   b.onclick=function(){b.classList.toggle("done")};
+   r.appendChild(b)})(i)}
+  var t=el("button","go","⏱ "+x.rest+" s");
+  t.onclick=function(){start("Descanso · "+x.n.replace(/^\d+\.\s*/,""),x.rest)};
+  r.appendChild(t);c.appendChild(r);
+  var w=el("input","peso");w.type="text";w.setAttribute("inputmode","decimal");w.placeholder="Peso (kg) · anota aquí";c.appendChild(w);
+  app.appendChild(c)
+ })
+});
+if(d.squats){var sc=el("div","card");sc.appendChild(el("div","t","5. Sentadillas al aire (Air Squats)"));sc.appendChild(el("div","meta","3 series · 30 s trabajo + 30 s descanso · máximas sentadillas posibles"));
+var su=el("ul");su.appendChild(el("li","","Opcional con peso: pelota, saco búlgaro, kettlebell o mancuerna"));sc.appendChild(su);
+var sb=el("button","go","▶ Iniciar 3 series");sb.onclick=function(){beep(1,.01);run([{label:"SENTADILLAS · serie 1",sec:30},{label:"Descanso",sec:30},{label:"SENTADILLAS · serie 2",sec:30},{label:"Descanso",sec:30},{label:"SENTADILLAS · serie 3",sec:30}],0)};sc.appendChild(sb);
+var sr=el("div","row");sr.style.marginTop="10px";var b1=el("button","set","Sin peso"),b2=el("button","set","Con peso");
+b1.onclick=function(){b1.classList.toggle("done");b2.classList.remove("done")};b2.onclick=function(){b2.classList.toggle("done");b1.classList.remove("done")};sr.appendChild(b1);sr.appendChild(b2);sc.appendChild(sr);
+var tot=el("input","peso");tot.type="text";tot.setAttribute("inputmode","numeric");tot.placeholder="Sentadillas totales";sc.appendChild(tot);
+var pw=el("input","peso");pw.type="text";pw.placeholder="Peso / material usado (opcional)";sc.appendChild(pw);app.appendChild(sc)}
+if(d.plank){app.appendChild(el("h2","","Cash out"));
+var pc=el("div","card");pc.appendChild(el("div","t","Plancha abdominal"));
+pc.appendChild(el("div","meta","2 series · 45 s plancha + 30 s descanso"));
+var pb=el("button","go","▶ Iniciar plancha");
+pb.onclick=function(){beep(1,.01);run([
+ {label:"PLANCHA · serie 1",sec:45},{label:"Descanso",sec:30},
+ {label:"PLANCHA · serie 2",sec:45},{label:"Descanso final",sec:30}],0)};
+pc.appendChild(pb);app.appendChild(pc)}
+if(d.fin){app.appendChild(el("h2","","Final"));var fc=el("div","card");fc.appendChild(el("div","t",d.fin));fc.appendChild(el("div","meta","Ritmo medio · cronómetro libre"));var sw=el("div","t","0:00");sw.style.cssText="font-size:40px;font-weight:800;font-variant-numeric:tabular-nums;margin:6px 0";fc.appendChild(sw);var fg=el("button","go","▶ Iniciar"),sw0=0,swA=0,swT=null;fg.onclick=function(){if(swT){clearInterval(swT);swT=null;fg.textContent="▶ Reanudar"}else{sw0=Date.now()-swA;swT=setInterval(function(){swA=Date.now()-sw0;sw.textContent=fmt(Math.floor(swA/1000))},250);fg.textContent="⏸ Parar"}};fc.appendChild(fg);var fr=el("div","row");fr.style.marginTop="10px";var fb=el("button","set","Hecho");fb.onclick=function(){fb.classList.toggle("done")};fr.appendChild(fb);fc.appendChild(fr);var fi=el("input","peso");fi.type="text";fi.setAttribute("inputmode","numeric");fi.placeholder="Minutos (opcional)";fc.appendChild(fi);app.appendChild(fc)}
+}
+var tb=document.getElementById("tabs");
+DAYS.forEach(function(d,i){var b=el("button","tab",d.short);b.onclick=function(){[].forEach.call(tb.children,function(x){x.classList.remove("on")});b.classList.add("on");render(d);window.scrollTo(0,0)};if(!i)b.classList.add("on");tb.appendChild(b)});
+render(DAYS[0]);
+document.getElementById("stop").onclick=stop;
+</script>
+</body>
+</html>
